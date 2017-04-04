@@ -103,6 +103,7 @@ export function postComment(feedItemId, author, contents, cb) {
   // document in the database.
   var feedItem = readDocument('feedItems', feedItemId);
   feedItem.comments.push({
+    "likeCounter": [],
     "author": author,
     "contents": contents,
     "postDate": new Date().getTime()
@@ -146,4 +147,24 @@ export function unlikeFeedItem(feedItemId, userId, cb) {
   }
   // Return a resolved version of the likeCounter
   emulateServerReturn(feedItem.likeCounter.map((userId) => readDocument('users', userId)), cb);
+}
+
+
+export function likeComment(feedItemId, userId, commentIndex, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  feedItem.comments[commentIndex].likeCounter.push(userId)
+  writeDocument('feedItems', feedItem);
+  emulateServerReturn(feedItem.comments[commentIndex].likeCounter, cb);
+}
+
+
+export function unlikeComment(feedItemId, userId, commentIndex, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  var userIndex = feedItem.comments[commentIndex].likeCounter.indexOf(userId);
+  if (userIndex !== -1) {
+    // 'splice' removes items from an array. This removes 1 element starting from userIndex.
+    feedItem.comments[commentIndex].likeCounter.splice(userIndex, 1);
+    writeDocument('feedItems', feedItem);
+  }
+  emulateServerReturn(feedItem.comments[commentIndex].likeCounter, cb);
 }
